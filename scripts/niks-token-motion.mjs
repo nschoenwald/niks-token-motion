@@ -29,6 +29,10 @@ const APPLY_TO = {
     ALL: "all"
 };
 
+/** Token Warp's module id and the settings of it this module overrides. */
+const TOKEN_WARP_ID = "tokenwarp";
+const TOKEN_WARP_SPEED_SETTING = `${TOKEN_WARP_ID}.defaultTokenAnimationSpeed`;
+
 /** Movement actions that never hop square by square; with the Step style they are lifted and placed instead. */
 const AERIAL_ACTIONS = new Set(["fly", "jump"]);
 
@@ -82,6 +86,9 @@ const smooth = (t) => {
 
 /** Cubic ease-in-out from 0 to 1. */
 const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (Math.pow((-2 * t) + 2, 3) / 2));
+
+/** Is Token Warp active? */
+const tokenWarpActive = () => !!game.modules.get(TOKEN_WARP_ID)?.active;
 
 /** Lift height as a fraction of the token size; 0 turns the lift visuals off. */
 const liftHeight = () => setting("lift-height") / 100;
@@ -244,6 +251,21 @@ function addResetButton(application, element) {
     section.append(group);
 }
 
+/**
+ * Tell GMs in Token Warp's settings that its animation speed is overridden while a movement style other than Foundry
+ * default is selected (Token Warp's per-actor speed overrides are too, see README).
+ */
+function addTokenWarpNote(application, element) {
+    if (!tokenWarpActive() || (setting("movement-style") === STYLE.DEFAULT)) return;
+    const input = element.querySelector(`[name="${TOKEN_WARP_SPEED_SETTING}"]`);
+    const group = input?.closest(".form-group");
+    if (!group || group.querySelector(".ntm-token-warp-note")) return;
+    const note = document.createElement("p");
+    note.className = "hint ntm-token-warp-note";
+    note.textContent = game.i18n.localize("NTM.TokenWarp.SpeedOverridden");
+    group.append(note);
+}
+
 // ─── Movement Profile ──────────────────────────────────────
 
 /**
@@ -371,8 +393,11 @@ function segmentWeight(document, from, to, action, terrain) {
 function shouldGlide(document, movement, options) {
     if ((setting("movement-style") === STYLE.DEFAULT) || (options.animate === false)) return false;
 
-    // Respect explicit animation timing from macros and other modules
-    if ((options.animation?.duration !== undefined) || (options.animation?.movementSpeed !== undefined)) return false;
+    // Respect explicit animation timing from macros and other modules. Token Warp stamps its own animation speed on
+    // every move (overwriting any other), so with Token Warp active a movement speed is not a reason to step aside.
+    // Its `animate: false` moves (no animations, walls block, teleport, out of bounds) are still respected above
+    if (options.animation?.duration !== undefined) return false;
+    if ((options.animation?.movementSpeed !== undefined) && !tokenWarpActive()) return false;
 
     const applyTo = setting("apply-to");
     if ((applyTo === APPLY_TO.DRAGGING) && (movement.method !== "dragging")) return false;
@@ -814,6 +839,7 @@ Hooks.once("init", () => {
     wrapTokenMethod("animate", animateWrapper);
     wrapTokenMethod("stopAnimation", stopAnimationWrapper);
     Hooks.on("renderSettingsConfig", addResetButton);
+    Hooks.on("renderSettingsConfig", addTokenWarpNote);
 
     // The shadow lives in the primary group, not in the token: remove it with the token
     Hooks.on("destroyToken", token => destroyShadow(lifts.get(token)));

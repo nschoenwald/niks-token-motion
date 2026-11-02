@@ -93,6 +93,20 @@ that one for them.
 
 ---
 
+## Token Warp
+
+[Token Warp](https://foundryvtt.com/packages/tokenwarp) sets an animation speed on every move. While the Movement Style
+isn't Foundry default, Nik's Token Motion takes over the timing instead, so Token Warp's **Default Token Animation
+Speed** and its per-actor animation speed overrides have no effect. Token Warp's settings show a note about this.
+
+Token Warp's moves without animation still happen instantly: **No Animations**, **Walls Block**, its teleport keys
+and moves clamped to the scene's edge. They exist so tokens don't reveal the map on their way, and Token Motion
+doesn't animate them.
+
+Set the Movement Style to Foundry default to use Token Warp's speeds again.
+
+---
+
 ## Notes
 
 - Tokens with **Auto-Rotate** still pause briefly to turn at each corner, as in core Foundry.

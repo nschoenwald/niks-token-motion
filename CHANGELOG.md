@@ -1,5 +1,9 @@
 # Changelog
 
+## 14.1.0
+
+- **Works with Token Warp:** Token Motion's movement styles now take effect with Token Warp active, instead of Token Warp's animation speed. Token Warp's instant moves (No Animations, Walls Block, teleports) still stay instant.
+
 ## 14.0.0
 
 First release.

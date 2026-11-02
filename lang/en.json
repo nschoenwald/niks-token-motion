@@ -1,5 +1,8 @@
 {
   "NTM": {
+    "TokenWarp": {
+      "SpeedOverridden": "Nik's Token Motion sets the movement speed while its Movement Style isn't Foundry default, so this setting and the per-actor speed overrides have no effect."
+    },
     "Settings": {
       "MovementStyle": {
         "Name": "Movement Style",
