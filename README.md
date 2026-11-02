@@ -128,7 +128,7 @@ Set the Movement Style to Foundry default to use Token Warp's speeds again.
 * **[Nik's Movement Control](https://github.com/nschoenwald/niks-movement-control)** – GM controls to toggle player movement and automatically restrict/allow movement on combat start and end.
 * **[Nik's Tiny Change Logs](https://github.com/nschoenwald/niks-tiny-changelogs)** – Compact, single-line chat messages logging token HP and Temp HP changes.
 
-### 🎲 Visuals & Display
+### 🎨 Visuals & Display
 * **[Nik's Dynamic Roll Area](https://github.com/nschoenwald/niks-dynamic-roll-area)** – Dynamically restricts Dice So Nice 3D dice rolling area to exclude the sidebar / chat log across all screen resolutions and window sizes.
 
 ### ⚙️ Utilities & System Management
