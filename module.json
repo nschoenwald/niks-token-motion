@@ -1,0 +1,39 @@
+{
+  "id": "niks-token-motion",
+  "title": "Nik's Token Motion",
+  "description": "<p>Makes token movement feel smooth and tactile. Tokens glide with acceleration and deceleration along their whole path, are lifted and set down like chess pieces, or hop square by square like miniatures. Long moves no longer crawl across the map, and the drag preview glides between grid spaces and is lifted while you hold it.</p>",
+  "version": "14.0.0",
+  "authors": [
+    {
+      "name": "nikolai.sw",
+      "flags": {}
+    }
+  ],
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "relationships": {
+    "recommends": [
+      {
+        "id": "lib-wrapper",
+        "type": "module",
+        "reason": "Improves compatibility with other modules that patch token animation."
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/niks-token-motion.mjs"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "url": "https://github.com/nschoenwald/niks-token-motion",
+  "manifest": "https://github.com/nschoenwald/niks-token-motion/releases/latest/download/module.json",
+  "download": "https://github.com/nschoenwald/niks-token-motion/releases/latest/download/module.zip",
+  "flags": {}
+}

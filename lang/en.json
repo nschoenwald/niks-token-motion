@@ -1,0 +1,62 @@
+{
+  "NTM": {
+    "Settings": {
+      "MovementStyle": {
+        "Name": "Movement Style",
+        "Hint": "How tokens move. Step: hops one grid space at a time like a miniature (flying and jumping tokens, gridless scenes and very long moves use Lift & Place). Lift & Place: lifted, carried and set down like a chess piece. Glide: speeds up and slows down smoothly.",
+        "Default": "Foundry default",
+        "Glide": "Glide",
+        "Lift": "Lift & Place",
+        "Step": "Step"
+      },
+      "ApplyTo": {
+        "Name": "Apply To",
+        "Hint": "Which moves use the movement style. Keyboard moves are short and repeated quickly, so they usually feel better at Foundry's default speed.",
+        "Dragging": "Dragged tokens only",
+        "NoKeyboard": "All moves except keyboard",
+        "All": "All moves"
+      },
+      "TopSpeed": {
+        "Name": "Top Speed (grid spaces per second)",
+        "Hint": "The fastest a token moves on long moves. Foundry's default constant speed is 6."
+      },
+      "Acceleration": {
+        "Name": "Acceleration (grid spaces per second²)",
+        "Hint": "How quickly tokens speed up and slow down. Higher values feel snappier; lower values feel heavier."
+      },
+      "MaxDuration": {
+        "Name": "Maximum Move Duration (seconds)",
+        "Hint": "Very long moves are sped up so they never take longer than this. 0 means no limit."
+      },
+      "HopDuration": {
+        "Name": "Hop Duration (milliseconds)",
+        "Hint": "Step style: how long one hop to the next grid space takes, including the short rest. Long moves use shorter hops to stay within the maximum move duration."
+      },
+      "LiftHeight": {
+        "Name": "Lift Height (%)",
+        "Hint": "Lift & Place, Step and dragging: how much bigger a lifted token looks. 0 turns lifting off."
+      },
+      "Shadow": {
+        "Name": "Shadow Under Lifted Tokens",
+        "Hint": "A soft shadow stays on the table below a lifted token."
+      },
+      "Terrain": {
+        "Name": "Slow Down in Difficult Terrain",
+        "Hint": "Tokens move slower through difficult terrain, as they do without this module."
+      },
+      "PreviewSmoothing": {
+        "Name": "Drag Preview Smoothing",
+        "Hint": "The token you drag glides between grid spaces instead of jumping. This only changes how the preview looks to you.",
+        "Off": "Off",
+        "Snappy": "Snappy",
+        "Smooth": "Smooth"
+      },
+      "Reset": {
+        "Name": "Reset to Defaults",
+        "Hint": "Fills in the default values for this module's settings. Click Save Changes to apply them.",
+        "Button": "Reset",
+        "Info": "Nik's Token Motion defaults filled in. Click Save Changes to apply them."
+      }
+    }
+  }
+}
