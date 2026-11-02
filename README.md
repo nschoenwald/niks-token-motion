@@ -145,4 +145,4 @@ Set the Movement Style to Foundry default to use Token Warp's speeds again.
 
 ## License
 
-GPL-3.0. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
