@@ -115,7 +115,7 @@ Set the Movement Style to Foundry default to use Token Warp's speeds again.
 
 ---
 
-## Other Modules by Nik
+## Modules by Nik
 
 ### 🎲 D&D 5e Specific
 * **[Nik's DnD5e Tweaks](https://github.com/nschoenwald/niks-dnd5e-tweaks)** – Consolidated collection of quality-of-life enhancements and combat automation tweaks for DnD5e.
