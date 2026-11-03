@@ -5,7 +5,8 @@
  * - Glide: one acceleration / deceleration profile over the whole movement path instead of a constant speed per
  *   segment. Short moves start and stop softly, long moves reach a higher top speed and can be capped.
  * - Lift & Place: like Glide, but the token is lifted off the table, carried and set down like a chess piece.
- * - Step: the token hops one grid space at a time like a miniature: lift, carry, set down, short rest.
+ * - Step: the token hops one grid space at a time like a miniature: lift, carry, set down, short rest. On gridless
+ *   scenes the hops are about one grid size long, evenly spread along the path.
  * The lift is visual only (mesh scale, offset and a shadow); the token's elevation never changes.
  * The drag preview glides toward its grid space instead of jumping there, and is lifted while dragged.
  *
@@ -416,6 +417,13 @@ function pathSpaces(document, from, to) {
     return canvas.grid.getDirectPath([document.getCenterPoint(from), document.getCenterPoint(to)]);
 }
 
+/** Step: number of one-space hops of a segment. Gridless: the horizontal distance in grid sizes, rounded. */
+function segmentHops(document, from, to) {
+    if (!canvas.grid.isGridless) return Math.max(pathSpaces(document, from, to).length - 1, 1);
+    const distance = Math.hypot((to.x ?? from.x) - from.x, (to.y ?? from.y) - from.y) / canvas.dimensions.size;
+    return Math.max(Math.round(distance), 1);
+}
+
 /**
  * Step: timing of the hops. Hops last the hop duration (times the segment's slowdown); if all hops together would
  * take longer than the maximum duration they get shorter, down to a minimum, then the token hops two spaces at a time.
@@ -427,7 +435,7 @@ function createStepTiming(document, segments) {
     for (const { from, to } of segments) {
         const slowdown = segmentSlowdown(document, to.action, to.terrain);
         if (!slowdown || !(segmentLength(from, to) > 0)) continue;
-        const spaces = Math.max(pathSpaces(document, from, to).length - 1, 1);
+        const spaces = segmentHops(document, from, to);
         hops += spaces;
         slowHops += spaces * slowdown;
     }
@@ -467,7 +475,7 @@ function createPlan(token, movement, options, userId) {
     let style = setting("movement-style");
     let step = null;
     if (style === STYLE.STEP) {
-        const ground = !canvas.grid.isGridless && segments.every(({ to }) => !AERIAL_ACTIONS.has(to.action));
+        const ground = segments.every(({ to }) => !AERIAL_ACTIONS.has(to.action));
         step = ground ? createStepTiming(document, segments) : null;
         if (!step) style = STYLE.LIFT;
     }
@@ -495,6 +503,7 @@ function createPlan(token, movement, options, userId) {
  * single hop if a hop would pass through a wall that the straight line doesn't.
  */
 function hopPositions(token, plan, from, to) {
+    if (canvas.grid.isGridless) return gridlessHopPositions(token, plan, from, to);
     const document = token.document;
     const spaces = pathSpaces(document, from, to);
     if (spaces.length <= 2) return [to];
@@ -522,6 +531,27 @@ function hopPositions(token, plan, from, to) {
         if (token.checkCollision(next, { origin: previous, type: "move", mode: "any" })) return [to];
         previous = next;
     }
+    return positions;
+}
+
+/**
+ * Step, gridless: hops of equal length along the straight line of the segment, about one grid size each. They stay
+ * on the line the movement was validated along, so no wall check is needed.
+ */
+function gridlessHopPositions(token, plan, from, to) {
+    const hops = segmentHops(token.document, from, to);
+    if (hops <= 1) return [to];
+    const target = { x: to.x ?? from.x, y: to.y ?? from.y, elevation: to.elevation ?? from.elevation };
+    const positions = [];
+    for (let k = plan.step.stride; k < hops; k += plan.step.stride) {
+        const f = k / hops;
+        positions.push({
+            x: Math.round(from.x + ((target.x - from.x) * f)),
+            y: Math.round(from.y + ((target.y - from.y) * f)),
+            elevation: from.elevation + ((target.elevation - from.elevation) * f)
+        });
+    }
+    positions.push(to);
     return positions;
 }
 

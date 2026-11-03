@@ -6,7 +6,7 @@
     "Settings": {
       "MovementStyle": {
         "Name": "Movement Style",
-        "Hint": "How tokens move. Step: hops one grid space at a time like a miniature (flying and jumping tokens, gridless scenes and very long moves use Lift & Place). Lift & Place: lifted, carried and set down like a chess piece. Glide: speeds up and slows down smoothly.",
+        "Hint": "How tokens move. Step: hops one grid space at a time like a miniature (about one grid size per hop on gridless scenes; flying and jumping tokens and very long moves use Lift & Place). Lift & Place: lifted, carried and set down like a chess piece. Glide: speeds up and slows down smoothly.",
         "Default": "Foundry default",
         "Glide": "Glide",
         "Lift": "Lift & Place",

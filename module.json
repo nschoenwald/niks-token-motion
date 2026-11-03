@@ -2,7 +2,7 @@
   "id": "niks-token-motion",
   "title": "Nik's Token Motion",
   "description": "<p>Makes token movement feel smooth and tactile. Tokens glide with acceleration and deceleration along their whole path, are lifted and set down like chess pieces, or hop square by square like miniatures. Long moves no longer crawl across the map, and the drag preview glides between grid spaces and is lifted while you hold it.</p>",
-  "version": "14.1.0",
+  "version": "14.2.0",
   "authors": [
     {
       "name": "nikolai.sw",

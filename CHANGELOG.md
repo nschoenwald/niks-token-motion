@@ -1,5 +1,9 @@
 # Changelog
 
+## 14.2.0
+
+- **Step on gridless scenes:** tokens now hop on gridless scenes too, in even steps of about one grid size, instead of using Lift & Place.
+
 ## 14.1.0
 
 - **Works with Token Warp:** Token Motion's movement styles now take effect with Token Warp active, instead of Token Warp's animation speed. Token Warp's instant moves (No Animations, Walls Block, teleports) still stay instant.

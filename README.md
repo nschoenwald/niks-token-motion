@@ -32,11 +32,11 @@ vision and position on the map are never changed by it.
 
 With **Step**:
 
-- Flying and jumping tokens, and every move on a gridless scene, use **Lift & Place**, since they don't tap from
-  space to space.
+- Flying and jumping tokens use **Lift & Place**, since they don't tap from space to space.
+- On gridless scenes the token hops in even steps of about one grid size along its path.
 - Long moves use shorter hops so they stay within the **Maximum Move Duration**. When that isn't enough, the token
   hops two spaces at a time, and moves over 50 spaces use Lift & Place.
-- Hops land on grid spaces. If hopping would cut a wall corner, the token moves straight along that stretch instead.
+- On gridded scenes hops land on grid spaces. If hopping would cut a wall corner, the token moves straight along that stretch instead.
 
 ### Faster long moves
 
