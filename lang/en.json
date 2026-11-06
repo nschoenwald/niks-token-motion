@@ -29,7 +29,7 @@
       },
       "MaxDuration": {
         "Name": "Maximum Move Duration (seconds)",
-        "Hint": "Very long moves are sped up so they never take longer than this. 0 means no limit."
+        "Hint": "Very long moves are sped up so they never take longer than this. When several tokens move together, the longest move sets the pace for all of them. 0 means no limit."
       },
       "HopDuration": {
         "Name": "Hop Duration (milliseconds)",
@@ -46,6 +46,14 @@
       "Terrain": {
         "Name": "Slow Down in Difficult Terrain",
         "Hint": "Tokens move slower through difficult terrain, as they do without this module."
+      },
+      "GroupSpeed": {
+        "Name": "Group Speed",
+        "Hint": "How fast tokens move when several are moved together, for example dragged as a group. Standard: all move at normal speed, ignoring slower movement actions, conditions and difficult terrain. Slowest or Fastest: all move at the speed of the slowest or fastest token. Individual: each moves at its own speed, so slowed tokens fall behind.",
+        "Standard": "Standard speed for all",
+        "Slowest": "Speed of the slowest token",
+        "Fastest": "Speed of the fastest token",
+        "Individual": "Individual speeds"
       },
       "PreviewSmoothing": {
         "Name": "Drag Preview Smoothing",

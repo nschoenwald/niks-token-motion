@@ -1,5 +1,13 @@
 # Changelog
 
+## 14.3.0
+
+- **Group Speed setting:** tokens moved together, for example dragged as a group, now move at the same speed and stay side by side. By default they all move at standard speed, even if one is prone, crawling or in difficult terrain. You can instead have the whole group move at the speed of its slowest or fastest token, or let each token move at its own speed.
+- With individual speeds, a slowed token now falls behind by exactly as much as it is slowed. Before, the difference shrank on short moves and almost vanished on long ones.
+- **Step in rhythm:** tokens moved together now hop to the same beat instead of each at its own pace.
+- **Maximum Move Duration for groups:** the group as a whole arrives within the limit, and all its tokens are sped up by the same amount.
+- Slowed tokens now also take exactly as much longer when they move alone (twice as long at half speed), and speed up and slow down more gently.
+
 ## 14.2.0
 
 - **Step on gridless scenes:** tokens now hop on gridless scenes too, in even steps of about one grid size, instead of using Lift & Place.

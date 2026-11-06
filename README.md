@@ -57,9 +57,33 @@ default settings:
 What still works as before:
 
 - Slower movement actions (such as crawling or swimming) and difficult terrain still slow the token down, and
-  teleporting movement is still instant.
+  teleporting movement is still instant. A token at half speed takes exactly twice as long, and speeds up and slows
+  down more gently.
 - Macros and modules that set their own animation duration or speed keep their timing.
 - Keyboard moves keep Foundry's default speed unless you choose otherwise.
+
+### Tokens moving together
+
+When several tokens are moved at once (for example dragged together), they share one clock. **Group Speed** decides
+how fast they move:
+
+| Group Speed | What you see |
+|---|---|
+| **Standard speed for all** (default) | All tokens move at normal speed and stay side by side, ignoring slower movement actions, conditions such as prone and difficult terrain. |
+| **Speed of the slowest token** | All tokens move together at the pace of the most slowed token. |
+| **Speed of the fastest token** | All tokens move together at the pace of the least slowed token. |
+| **Individual speeds** | Each token moves at its own speed: a slowed token falls behind by exactly as much as it is slowed. |
+
+A token's speed here is its average over its whole path. Teleporting stays instant, and a single token moving alone
+always moves at its own speed.
+
+Also for groups:
+
+- With **Step**, all of them hop to the same beat. Long moves shorten the hops (or hop two spaces at a time) for the
+  whole group alike. If the group's longest move is too long to hop, the whole group uses Lift & Place.
+- The **Maximum Move Duration** applies to the group: the token with the longest move takes at most that long, and
+  the others are sped up by the same amount, so their speeds stay in proportion.
+- Flying and jumping tokens in a Step group still use Lift & Place, timed together with any other lifted tokens.
 
 ### Drag preview
 
@@ -78,11 +102,12 @@ set down. This only changes how the preview looks; snapping, the ruler and the f
 | Apply To | World | All moves except keyboard | Dragged tokens only, all moves except keyboard, or all moves. |
 | Top Speed | World | 24 spaces/s | Glide and Lift & Place: the fastest a token moves on long moves. |
 | Acceleration | World | 40 spaces/s² | Glide and Lift & Place: how quickly tokens speed up and slow down. |
-| Maximum Move Duration | World | 3 s | Very long moves are sped up to fit. 0 means no limit. |
+| Maximum Move Duration | World | 3 s | Very long moves are sped up to fit; in a group, the longest move sets the pace. 0 means no limit. |
 | Hop Duration | World | 220 ms | Step: how long one hop takes, including the short rest. |
 | Lift Height | World | 8 % | How much bigger a lifted token looks. 0 turns lifting off. |
 | Shadow Under Lifted Tokens | World | On | A soft shadow stays on the table below a lifted token. |
 | Slow Down in Difficult Terrain | World | On | Difficult terrain slows tokens down, as in core Foundry. |
+| Group Speed | World | Standard speed for all | How fast tokens moved together move: standard speed, the slowest or fastest token's speed, or each its own. |
 | Drag Preview Smoothing | Client | Snappy | Off, Snappy or Smooth. |
 
 The movement settings are world settings so every player sees the same motion.

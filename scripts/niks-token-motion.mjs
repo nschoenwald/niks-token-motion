@@ -30,6 +30,14 @@ const APPLY_TO = {
     ALL: "all"
 };
 
+/** How fast tokens moved together move. */
+const GROUP_SPEED = {
+    STANDARD: "standard",
+    INDIVIDUAL: "individual",
+    SLOWEST: "slowest",
+    FASTEST: "fastest"
+};
+
 /** Token Warp's module id and the settings of it this module overrides. */
 const TOKEN_WARP_ID = "tokenwarp";
 const TOKEN_WARP_SPEED_SETTING = `${TOKEN_WARP_ID}.defaultTokenAnimationSpeed`;
@@ -96,6 +104,9 @@ const liftHeight = () => setting("lift-height") / 100;
 
 /** Glide plans of the tokens whose movement animation is being dispatched right now. */
 const plans = new WeakMap();
+
+/** Movement analyses of all tokens moved by one update operation, keyed by the operation's `_movement` object. */
+const groupTimings = new WeakMap();
 
 /** Smoothing state of drag preview tokens. */
 const previewStates = new WeakMap();
@@ -203,6 +214,21 @@ function registerSettings() {
         type: Boolean
     });
 
+    game.settings.register(MODULE_ID, "group-speed", {
+        name: "NTM.Settings.GroupSpeed.Name",
+        hint: "NTM.Settings.GroupSpeed.Hint",
+        scope: "world",
+        config: true,
+        default: GROUP_SPEED.STANDARD,
+        type: String,
+        choices: {
+            [GROUP_SPEED.STANDARD]: "NTM.Settings.GroupSpeed.Standard",
+            [GROUP_SPEED.SLOWEST]: "NTM.Settings.GroupSpeed.Slowest",
+            [GROUP_SPEED.FASTEST]: "NTM.Settings.GroupSpeed.Fastest",
+            [GROUP_SPEED.INDIVIDUAL]: "NTM.Settings.GroupSpeed.Individual"
+        }
+    });
+
     game.settings.register(MODULE_ID, "preview-smoothing", {
         name: "NTM.Settings.PreviewSmoothing.Name",
         hint: "NTM.Settings.PreviewSmoothing.Hint",
@@ -270,23 +296,28 @@ function addTokenWarpNote(application, element) {
 // ─── Movement Profile ──────────────────────────────────────
 
 /**
- * Create a velocity profile for the given effective length (in grid spaces): constant acceleration up to the top
- * speed, cruise, then constant deceleration. If the result is longer than the maximum duration, time is scaled down
- * so the curve keeps its shape.
- * @param {number} length    Effective length in grid spaces (> 0)
- * @returns {{duration: number, distanceAt: (ms: number) => number, timeAt: (distance: number) => number}}
+ * Create a velocity profile over the weighted path: constant acceleration up to the top speed, cruise, then constant
+ * deceleration. A slowed path (weight above its length) is the unslowed motion stretched in time: the acceleration is
+ * divided by the average slowdown, so a token at half speed takes exactly twice as long, and the curve keeps its shape.
+ * Time is then multiplied by the given scale (below 1 to fit the maximum duration).
+ * @param {number} weight      Weighted length in grid spaces (> 0): length times slowdown
+ * @param {number} length      Unweighted length in grid spaces
+ * @param {number} [scale=1]   Time scale
+ * @returns {{total: number, duration: number, distanceAt: (ms: number) => number, timeAt: (distance: number) => number}}
  */
-function createProfile(length) {
-    const acceleration = setting("acceleration");
-    const peak = Math.min(setting("top-speed"), Math.sqrt(length * acceleration));
+function createProfile(weight, length, scale = 1) {
+    const slowdown = length > 0 ? weight / length : 1;
+    const acceleration = setting("acceleration") / slowdown;
+    const peak = Math.min(setting("top-speed"), Math.sqrt(weight * acceleration));
     const rampTime = peak / acceleration;
     const rampDistance = peak * rampTime / 2;
-    const cruiseTime = Math.max(length - (2 * rampDistance), 0) / peak;
+    const cruiseTime = Math.max(weight - (2 * rampDistance), 0) / peak;
     const total = (2 * rampTime) + cruiseTime;
-    const maxDuration = setting("max-duration");
-    const scale = (maxDuration > 0) && (total > maxDuration) ? maxDuration / total : 1;
 
     return {
+        /** Unscaled duration in ms. */
+        total: total * 1000,
+
         /** Duration in ms. */
         duration: total * scale * 1000,
 
@@ -296,16 +327,16 @@ function createProfile(length) {
             if (t < rampTime) return acceleration * t * t / 2;
             if (t < rampTime + cruiseTime) return rampDistance + (peak * (t - rampTime));
             const remaining = total - t;
-            return length - (acceleration * remaining * remaining / 2);
+            return weight - (acceleration * remaining * remaining / 2);
         },
 
         /** Time (ms) at which the given distance is reached. */
         timeAt(distance) {
-            const d = Math.clamp(distance, 0, length);
+            const d = Math.clamp(distance, 0, weight);
             let t;
             if (d < rampDistance) t = Math.sqrt(2 * d / acceleration);
-            else if (d < length - rampDistance) t = rampTime + ((d - rampDistance) / peak);
-            else t = total - Math.sqrt(2 * (length - d) / acceleration);
+            else if (d < weight - rampDistance) t = rampTime + ((d - rampDistance) / peak);
+            else t = total - Math.sqrt(2 * (weight - d) / acceleration);
             return t * scale * 1000;
         }
     };
@@ -384,6 +415,15 @@ function segmentSlowdown(document, action, terrain) {
     return slowdown;
 }
 
+/**
+ * Slowdown of a segment within a planned movement: the plan's shared group slowdown if it has one (instant segments
+ * stay instant), otherwise the segment's own.
+ */
+function planSlowdown(plan, document, action, terrain) {
+    const slowdown = segmentSlowdown(document, action, terrain);
+    return (slowdown && plan.slowdown) ? plan.slowdown : slowdown;
+}
+
 /** Weight of a movement segment on the glide profile: its length times its slowdown. Instant segments weigh 0. */
 function segmentWeight(document, from, to, action, terrain) {
     const slowdown = segmentSlowdown(document, action, terrain);
@@ -425,11 +465,10 @@ function segmentHops(document, from, to) {
 }
 
 /**
- * Step: timing of the hops. Hops last the hop duration (times the segment's slowdown); if all hops together would
- * take longer than the maximum duration they get shorter, down to a minimum, then the token hops two spaces at a time.
- * @returns {{hopTime: number, stride: number}|null}    null if there would be too many hops
+ * Step: number of hops of a movement, plain and weighted by each segment's slowdown.
+ * @returns {{hops: number, slowHops: number}}
  */
-function createStepTiming(document, segments) {
+function countHops(document, segments) {
     let hops = 0;
     let slowHops = 0;
     for (const { from, to } of segments) {
@@ -439,6 +478,16 @@ function createStepTiming(document, segments) {
         hops += spaces;
         slowHops += spaces * slowdown;
     }
+    return { hops, slowHops };
+}
+
+/**
+ * Step: timing of the hops. Hops last the hop duration (times the segment's slowdown); if all hops together would
+ * take longer than the maximum duration they get shorter, down to a minimum, then the token hops two spaces at a time.
+ * For tokens moving together, `hops` and `slowHops` are those of the longest and slowest movement.
+ * @returns {{hopTime: number, stride: number}|null}    null if there would be too many hops
+ */
+function createStepTiming(hops, slowHops) {
     const baseHopTime = setting("hop-duration");
     const maxDuration = setting("max-duration") * 1000;
     const tooLong = (hopTime, stride) => (maxDuration > 0) && (hopTime * slowHops / stride > maxDuration);
@@ -454,31 +503,113 @@ function createStepTiming(document, segments) {
 }
 
 /**
- * Build the plan for a movement: the style, the total weight of the animated path and its profile, or the hop timing.
- * Mirrors the path core animates, which skips intermediate waypoints that aren't explicit.
- * @returns {object|null}    The plan, or null if the movement should animate as usual
+ * Analyse a movement: its animated segments, weighted and unweighted length, and style. Mirrors the path core
+ * animates, which skips intermediate waypoints that aren't explicit.
+ * @returns {object|null}    null if the movement should animate as usual
  */
-function createPlan(token, movement, options, userId) {
+function analyzeMovement(token, movement, options) {
     const document = token.document;
-    if (!movement.passed.waypoints.length || !shouldGlide(document, movement, options)) return null;
+    if (!movement?.passed?.waypoints.length || !shouldGlide(document, movement, options)) return null;
     const segments = [];
     let from = movement.origin;
     let total = 0;
+    let length = 0;
     for (const to of movement.passed.waypoints) {
         if (to.intermediate && !to.explicit) continue;
         segments.push({ from, to });
-        total += segmentWeight(document, from, to, to.action, to.terrain);
+        const weight = segmentWeight(document, from, to, to.action, to.terrain);
+        if (weight > 0) {
+            total += weight;
+            length += segmentLength(from, to);
+        }
         from = to;
     }
     if (!(total > 0)) return null;
 
     let style = setting("movement-style");
-    let step = null;
+    let hops = null;
     if (style === STYLE.STEP) {
-        const ground = segments.every(({ to }) => !AERIAL_ACTIONS.has(to.action));
-        step = ground ? createStepTiming(document, segments) : null;
-        if (!step) style = STYLE.LIFT;
+        if (segments.every(({ to }) => !AERIAL_ACTIONS.has(to.action))) hops = countHops(document, segments);
+        else style = STYLE.LIFT;
     }
+    return { segments, total, length, style, hops, slowdown: null, profile: null, step: null };
+}
+
+/**
+ * Group Speed: make all tokens of a group move at one speed. Standard ignores slowdowns, Slowest and Fastest use the
+ * largest or smallest average slowdown (weight / length) of the group. Every member then uses that slowdown on all of
+ * its animated segments; instant segments stay instant.
+ */
+function applyGroupSpeed(analyses) {
+    const mode = setting("group-speed");
+    if ((analyses.size < 2) || (mode === GROUP_SPEED.INDIVIDUAL)) return;
+    const slowdowns = [...analyses.values()].map(a => a.total / a.length);
+    let slowdown = 1;
+    if (mode === GROUP_SPEED.SLOWEST) slowdown = Math.max(...slowdowns);
+    else if (mode === GROUP_SPEED.FASTEST) slowdown = Math.min(...slowdowns);
+    for (const analysis of analyses.values()) {
+        analysis.slowdown = slowdown;
+        analysis.total = analysis.length * slowdown;
+        if (analysis.hops) analysis.hops.slowHops = analysis.hops.hops * slowdown;
+    }
+}
+
+/**
+ * Plan the timing of all tokens moved by one update operation together (e.g. several tokens dragged at once), so
+ * they share one clock. Group Speed decides whether they all move at one speed or each at its own; with individual
+ * speeds a slowed token (prone, difficult terrain, a slower movement action) falls behind by exactly its slowdown.
+ * The maximum duration speeds up all of them alike instead of each on its own.
+ * - Step: all hopping tokens use the same hop duration and stride, so they hop in rhythm.
+ * - Glide and Lift & Place: all profiles share one time scale, set by the slowest token.
+ * The result is cached on the operation's `_movement` object, which every token's `_onUpdate` receives.
+ * @returns {Map<string, object>}    Analyses with their profile or step timing, by token ID
+ */
+function groupTiming(token, options) {
+    const key = options._movement;
+    let analyses = groupTimings.get(key);
+    if (analyses) return analyses;
+
+    analyses = new Map();
+    const tokens = token.document.parent?.tokens;
+    for (const [id, movement] of Object.entries(key)) {
+        const member = (id === token.document.id) ? token : tokens?.get(id)?.object;
+        const analysis = member ? analyzeMovement(member, movement, options) : null;
+        if (analysis) analyses.set(id, analysis);
+    }
+    applyGroupSpeed(analyses);
+
+    // Step: one hop timing for all hopping tokens. If the slowest can't hop, they are all lifted and placed instead
+    const steppers = [...analyses.values()].filter(a => a.style === STYLE.STEP);
+    if (steppers.length) {
+        const step = createStepTiming(Math.max(...steppers.map(a => a.hops.hops)),
+            Math.max(...steppers.map(a => a.hops.slowHops)));
+        for (const analysis of steppers) {
+            if (step) analysis.step = step;
+            else analysis.style = STYLE.LIFT;
+        }
+    }
+
+    // Glide and Lift & Place: one time scale for all profiles
+    const gliders = [...analyses.values()].filter(a => a.style !== STYLE.STEP);
+    if (gliders.length) {
+        const longest = Math.max(...gliders.map(a => createProfile(a.total, a.length).total));
+        const maxDuration = setting("max-duration") * 1000;
+        const scale = (maxDuration > 0) && (longest > maxDuration) ? maxDuration / longest : 1;
+        for (const analysis of gliders) analysis.profile = createProfile(analysis.total, analysis.length, scale);
+    }
+
+    groupTimings.set(key, analyses);
+    return analyses;
+}
+
+/**
+ * Build the plan for a movement from its group timing.
+ * @returns {object|null}    The plan, or null if the movement should animate as usual
+ */
+function createPlan(token, movement, options, userId) {
+    const analysis = groupTiming(token, options).get(token.document.id);
+    if (!analysis) return null;
+    const { style, profile, step, total, segments, slowdown } = analysis;
 
     // The dragging user saw the preview lifted, so the token starts lifted on their screen
     const startLifted = (style !== STYLE.GLIDE) && (movement.method === "dragging") && (userId === game.user.id)
@@ -486,12 +617,13 @@ function createPlan(token, movement, options, userId) {
 
     return {
         style,
-        profile: style === STYLE.STEP ? null : createProfile(total),
+        profile,
         total,
         consumed: 0,
         cursor: { ...movement.origin },
         startLifted,
         step,
+        slowdown,
         anchors: segments.map(({ to }) => to),
         anchorIndex: 0
     };
@@ -733,14 +865,14 @@ function animateWrapper(wrapped, to, options = {}) {
     const action = options.action ?? this.document.movementAction;
     const from = plan.cursor;
     plan.cursor = { ...from, ...to };
+    const slowdown = planSlowdown(plan, this.document, action, options.terrain);
     if (plan.style === STYLE.STEP) {
-        const result = animateStep(this, wrapped, plan, from, to, options,
-            segmentSlowdown(this.document, action, options.terrain));
+        const result = animateStep(this, wrapped, plan, from, to, options, slowdown);
         const anchor = plan.anchors[plan.anchorIndex];
         if (anchor && reachesWaypoint(to, anchor)) plan.anchorIndex++;
         return result;
     }
-    return animateGlide(this, wrapped, plan, to, options, segmentWeight(this.document, from, to, action, options.terrain));
+    return animateGlide(this, wrapped, plan, to, options, slowdown ? segmentLength(from, to) * slowdown : 0);
 }
 
 /** Token#stopAnimation: a stopped movement puts the token down. */
