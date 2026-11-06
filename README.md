@@ -11,6 +11,7 @@ set down like chess pieces or hop square by square like miniatures on a table.
 - **Foundry VTT**: V14
 - **System**: System-agnostic (works with any game system)
 - **Recommended**: [libWrapper](https://foundryvtt.com/packages/lib-wrapper)
+- **Languages**: English, German
 
 ---
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 14.4.0
+
+- **German translation:** the module settings are now available in German.
+
 ## 14.3.0
 
 - **Group Speed setting:** tokens moved together, for example dragged as a group, now move at the same speed and stay side by side. By default they all move at standard speed, even if one is prone, crawling or in difficult terrain. You can instead have the whole group move at the speed of its slowest or fastest token, or let each token move at its own speed.

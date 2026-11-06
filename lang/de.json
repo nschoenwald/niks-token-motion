@@ -1,0 +1,73 @@
+{
+  "NTM": {
+    "TokenWarp": {
+      "SpeedOverridden": "Nik's Token Motion legt die Bewegungsgeschwindigkeit fest, solange sein Bewegungsstil nicht Foundry-Standard ist. Diese Einstellung und die Geschwindigkeiten pro Akteur haben daher keine Wirkung."
+    },
+    "Settings": {
+      "MovementStyle": {
+        "Name": "Bewegungsstil",
+        "Hint": "Wie sich Token bewegen. Schritt: hüpft wie eine Miniatur ein Feld nach dem anderen (auf Szenen ohne Raster etwa eine Rastergröße pro Sprung; fliegende und springende Token sowie sehr lange Bewegungen nutzen Anheben & Absetzen). Anheben & Absetzen: wird wie eine Schachfigur angehoben, getragen und abgesetzt. Gleiten: beschleunigt und bremst sanft.",
+        "Default": "Foundry-Standard",
+        "Glide": "Gleiten",
+        "Lift": "Anheben & Absetzen",
+        "Step": "Schritt"
+      },
+      "ApplyTo": {
+        "Name": "Anwenden auf",
+        "Hint": "Welche Bewegungen den Bewegungsstil nutzen. Tastaturbewegungen sind kurz und folgen schnell aufeinander, daher wirken sie meist mit Foundrys Standardgeschwindigkeit besser.",
+        "Dragging": "Nur gezogene Token",
+        "NoKeyboard": "Alle Bewegungen außer Tastatur",
+        "All": "Alle Bewegungen"
+      },
+      "TopSpeed": {
+        "Name": "Höchstgeschwindigkeit (Felder pro Sekunde)",
+        "Hint": "Die größte Geschwindigkeit eines Tokens bei langen Bewegungen. Foundrys konstante Standardgeschwindigkeit ist 6."
+      },
+      "Acceleration": {
+        "Name": "Beschleunigung (Felder pro Sekunde²)",
+        "Hint": "Wie schnell Token beschleunigen und bremsen. Höhere Werte wirken zackiger, niedrigere schwerer."
+      },
+      "MaxDuration": {
+        "Name": "Maximale Bewegungsdauer (Sekunden)",
+        "Hint": "Sehr lange Bewegungen werden beschleunigt, damit sie nie länger dauern. Bewegen sich mehrere Token gemeinsam, gibt die längste Bewegung das Tempo für alle vor. 0 bedeutet keine Begrenzung."
+      },
+      "HopDuration": {
+        "Name": "Sprungdauer (Millisekunden)",
+        "Hint": "Stil Schritt: wie lange ein Sprung zum nächsten Feld dauert, inklusive der kurzen Pause. Lange Bewegungen nutzen kürzere Sprünge, um innerhalb der maximalen Bewegungsdauer zu bleiben."
+      },
+      "LiftHeight": {
+        "Name": "Anhebehöhe (%)",
+        "Hint": "Anheben & Absetzen, Schritt und Ziehen: um wie viel größer ein angehobener Token wirkt. 0 schaltet das Anheben ab."
+      },
+      "Shadow": {
+        "Name": "Schatten unter angehobenen Token",
+        "Hint": "Ein weicher Schatten bleibt unter einem angehobenen Token auf dem Tisch."
+      },
+      "Terrain": {
+        "Name": "In schwierigem Gelände verlangsamen",
+        "Hint": "Token bewegen sich durch schwieriges Gelände langsamer, wie ohne dieses Modul."
+      },
+      "GroupSpeed": {
+        "Name": "Gruppengeschwindigkeit",
+        "Hint": "Wie schnell sich Token bewegen, wenn mehrere gemeinsam bewegt werden, etwa als Gruppe gezogen. Standard: alle bewegen sich mit normaler Geschwindigkeit, ohne Rücksicht auf langsamere Bewegungsarten, Zustände und schwieriges Gelände. Langsamster oder Schnellster: alle bewegen sich mit der Geschwindigkeit des langsamsten oder schnellsten Tokens. Individuell: jeder bewegt sich mit seiner eigenen Geschwindigkeit, verlangsamte Token fallen also zurück.",
+        "Standard": "Standardgeschwindigkeit für alle",
+        "Slowest": "Geschwindigkeit des langsamsten Tokens",
+        "Fastest": "Geschwindigkeit des schnellsten Tokens",
+        "Individual": "Individuelle Geschwindigkeiten"
+      },
+      "PreviewSmoothing": {
+        "Name": "Glättung der Zugvorschau",
+        "Hint": "Der gezogene Token gleitet zwischen den Feldern, statt zu springen. Das ändert nur, wie die Vorschau für dich aussieht.",
+        "Off": "Aus",
+        "Snappy": "Zackig",
+        "Smooth": "Sanft"
+      },
+      "Reset": {
+        "Name": "Auf Standardwerte zurücksetzen",
+        "Hint": "Füllt die Standardwerte für die Einstellungen dieses Moduls ein. Klicke auf Änderungen speichern, um sie zu übernehmen.",
+        "Button": "Zurücksetzen",
+        "Info": "Standardwerte von Nik's Token Motion eingefüllt. Klicke auf Änderungen speichern, um sie zu übernehmen."
+      }
+    }
+  }
+}
