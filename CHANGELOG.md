@@ -1,5 +1,9 @@
 # Changelog
 
+## 14.4.1
+
+- **Smoother movement:** lifted tokens and drag previews no longer look up the module's settings on every animation frame, which saves work with many tokens moving at once.
+
 ## 14.4.0
 
 - **German translation:** the module settings are now available in German.

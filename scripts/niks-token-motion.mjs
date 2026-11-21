@@ -85,7 +85,27 @@ const SHADOW_OFFSET = { x: 1.25, y: 1.75 };
 // ─── Utility ───────────────────────────────────────────────
 
 const log = (...args) => console.log(`${MODULE_ID} |`, ...args);
-const setting = (key) => game.settings.get(MODULE_ID, key);
+
+/**
+ * Setting values, because the lift and preview code reads them for every token on every frame. In V14 each
+ * `game.settings.get` scans the world's settings or builds a new Setting document. Cleared whenever one changes.
+ * @type {Map<string, any>}
+ */
+const settingCache = new Map();
+
+const setting = (key) => {
+    if (!settingCache.has(key)) settingCache.set(key, game.settings.get(MODULE_ID, key));
+    return settingCache.get(key);
+};
+
+Hooks.on("clientSettingChanged", (key) => {
+    if (key.startsWith(`${MODULE_ID}.`)) settingCache.clear();
+});
+for (const hook of ["createSetting", "updateSetting", "deleteSetting"]) {
+    Hooks.on(hook, (doc) => {
+        if (doc.key?.startsWith(`${MODULE_ID}.`)) settingCache.clear();
+    });
+}
 
 /** Smoothstep from 0 to 1. */
 const smooth = (t) => {
