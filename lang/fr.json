@@ -1,0 +1,73 @@
+{
+  "NTM": {
+    "TokenWarp": {
+      "SpeedOverridden": "Nik's Token Motion définit la vitesse de déplacement tant que son style de déplacement n'est pas celui de Foundry par défaut. Ce paramètre et les vitesses définies par acteur n'ont donc aucun effet."
+    },
+    "Settings": {
+      "MovementStyle": {
+        "Name": "Style de déplacement",
+        "Hint": "Comment les tokens se déplacent. Pas à pas : saute d'une case à la fois comme une figurine (environ une taille de case par saut sur les scènes sans grille ; les tokens qui volent ou sautent et les très longs déplacements utilisent Soulever et poser). Soulever et poser : soulevé, porté et reposé comme une pièce d'échecs. Glisser : accélère et ralentit en douceur.",
+        "Default": "Foundry par défaut",
+        "Glide": "Glisser",
+        "Lift": "Soulever et poser",
+        "Step": "Pas à pas"
+      },
+      "ApplyTo": {
+        "Name": "Appliquer à",
+        "Hint": "Quels déplacements utilisent le style de déplacement. Les déplacements au clavier sont courts et répétés rapidement, ils sont donc généralement plus agréables à la vitesse par défaut de Foundry.",
+        "Dragging": "Tokens glissés uniquement",
+        "NoKeyboard": "Tous les déplacements sauf au clavier",
+        "All": "Tous les déplacements"
+      },
+      "TopSpeed": {
+        "Name": "Vitesse maximale (cases par seconde)",
+        "Hint": "La vitesse la plus élevée d'un token lors des longs déplacements. La vitesse constante par défaut de Foundry est de 6."
+      },
+      "Acceleration": {
+        "Name": "Accélération (cases par seconde²)",
+        "Hint": "La rapidité avec laquelle les tokens accélèrent et ralentissent. Des valeurs élevées donnent un mouvement plus vif, des valeurs basses un mouvement plus lourd."
+      },
+      "MaxDuration": {
+        "Name": "Durée maximale d'un déplacement (secondes)",
+        "Hint": "Les déplacements très longs sont accélérés afin de ne jamais dépasser cette durée. Lorsque plusieurs tokens se déplacent ensemble, le déplacement le plus long donne le rythme à tous les autres. 0 signifie aucune limite."
+      },
+      "HopDuration": {
+        "Name": "Durée d'un saut (millisecondes)",
+        "Hint": "Style Pas à pas : durée d'un saut vers la case suivante, courte pause comprise. Les longs déplacements utilisent des sauts plus courts pour respecter la durée maximale d'un déplacement."
+      },
+      "LiftHeight": {
+        "Name": "Hauteur de levée (%)",
+        "Hint": "Soulever et poser, Pas à pas et glisser-déposer : à quel point un token soulevé paraît plus grand. 0 désactive la levée."
+      },
+      "Shadow": {
+        "Name": "Ombre sous les tokens soulevés",
+        "Hint": "Une ombre douce reste sur la table sous un token soulevé."
+      },
+      "Terrain": {
+        "Name": "Ralentir en terrain difficile",
+        "Hint": "Les tokens se déplacent plus lentement en terrain difficile, comme sans ce module."
+      },
+      "GroupSpeed": {
+        "Name": "Vitesse de groupe",
+        "Hint": "La vitesse des tokens lorsque plusieurs sont déplacés ensemble, par exemple glissés en groupe. Standard : tous se déplacent à la vitesse normale, sans tenir compte des actions de déplacement plus lentes, des états et du terrain difficile. Le plus lent ou le plus rapide : tous se déplacent à la vitesse du token le plus lent ou le plus rapide. Individuelle : chacun se déplace à sa propre vitesse, les tokens ralentis restent donc en arrière.",
+        "Standard": "Vitesse standard pour tous",
+        "Slowest": "Vitesse du token le plus lent",
+        "Fastest": "Vitesse du token le plus rapide",
+        "Individual": "Vitesses individuelles"
+      },
+      "PreviewSmoothing": {
+        "Name": "Lissage de l'aperçu de déplacement",
+        "Hint": "Le token que vous faites glisser passe en douceur d'une case à l'autre au lieu de sauter. Cela ne change que l'aspect de l'aperçu, et seulement pour vous.",
+        "Off": "Désactivé",
+        "Snappy": "Vif",
+        "Smooth": "Fluide"
+      },
+      "Reset": {
+        "Name": "Rétablir les valeurs par défaut",
+        "Hint": "Remplit les valeurs par défaut des paramètres de ce module. Cliquez sur Enregistrer les modifications pour les appliquer.",
+        "Button": "Rétablir",
+        "Info": "Valeurs par défaut de Nik's Token Motion remplies. Cliquez sur Enregistrer les modifications pour les appliquer."
+      }
+    }
+  }
+}

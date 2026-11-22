@@ -1,5 +1,9 @@
 # Changelog
 
+## 14.5.0
+
+- The module is now available in French, reviewed by Kameleau. Thank you!
+
 ## 14.4.1
 
 - **Smoother movement:** lifted tokens and drag previews no longer look up the module's settings on every animation frame, which saves work with many tokens moving at once.
