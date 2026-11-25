@@ -72,6 +72,9 @@ const HOP_MOVE = 0.8;
 const MIN_HOP_MS = 90;
 const MAX_HOPS = 25;
 
+/** Step: how far a flying token moving with hopping ones dips on each of their hops, as a fraction of its lift. */
+const FLIGHT_BOB_DEPTH = 0.15;
+
 /** Upward offset of a lifted token, in grid sizes per unit of lift height. */
 const LIFT_RISE = 0.6;
 
@@ -397,6 +400,13 @@ function hopLift(u, startLifted) {
     return Math.sin(Math.PI * t);
 }
 
+/**
+ * Step: lift factor of a flying token moving with hopping ones. It stays aloft and dips slightly each time they
+ * touch down (the middle of the rest at the end of each hop), so it moves in their rhythm.
+ * @param {number} hops    Time since the movement started, in hop durations
+ */
+const flightBob = (hops) => 1 - (FLIGHT_BOB_DEPTH * (0.5 + (0.5 * Math.cos(2 * Math.PI * (hops - ((1 + HOP_MOVE) / 2))))));
+
 // ─── Movement Plan ─────────────────────────────────────────
 
 /** Length of a movement segment in grid spaces, measured like core's movement animation duration. */
@@ -484,21 +494,49 @@ function segmentHops(document, from, to) {
     return Math.max(Math.round(distance), 1);
 }
 
+/** Vertical distance of a segment in grid spaces. */
+function verticalSpaces(from, to) {
+    const dz = ((to.elevation ?? from.elevation) - from.elevation) * canvas.dimensions.distancePixels;
+    return Math.abs(dz) / canvas.dimensions.size;
+}
+
 /**
- * Step: number of hops of a movement, plain and weighted by each segment's slowdown.
- * @returns {{hops: number, slowHops: number}}
+ * Step: number of hops of a movement, plain and weighted by each segment's slowdown, and per animated segment.
+ * Flying tokens never hop, but are paced as if they did (see `groupTiming`); for them a climb or descent counts
+ * as well, so flying straight up isn't a single hop.
+ * @param {TokenDocument} document
+ * @param {object[]} segments
+ * @param {boolean} [vertical=false]    Count vertical distance too
+ * @returns {{hops: number, slowHops: number, parts: {spaces: number, slowdown: number}[]}}
  */
-function countHops(document, segments) {
+function countHops(document, segments, vertical = false) {
     let hops = 0;
     let slowHops = 0;
+    const parts = [];
     for (const { from, to } of segments) {
         const slowdown = segmentSlowdown(document, to.action, to.terrain);
         if (!slowdown || !(segmentLength(from, to) > 0)) continue;
-        const spaces = segmentHops(document, from, to);
+        let spaces = segmentHops(document, from, to);
+        if (vertical) spaces = Math.max(spaces, Math.round(verticalSpaces(from, to)));
         hops += spaces;
         slowHops += spaces * slowdown;
+        parts.push({ spaces, slowdown });
     }
-    return { hops, slowHops };
+    return { hops, slowHops, parts };
+}
+
+/**
+ * Step: how long a movement takes at the given hop timing, hop by hop like `animateStep`.
+ * @param {{parts: {spaces: number, slowdown: number}[]}} hops
+ * @param {{hopTime: number, stride: number}} step
+ * @param {number|null} groupSlowdown    The group's shared slowdown, if any
+ */
+function stepDuration(hops, step, groupSlowdown) {
+    let duration = 0;
+    for (const { spaces, slowdown } of hops.parts) {
+        duration += Math.ceil(spaces / step.stride) * step.hopTime * (groupSlowdown ?? slowdown);
+    }
+    return duration;
 }
 
 /**
@@ -546,13 +584,17 @@ function analyzeMovement(token, movement, options) {
     }
     if (!(total > 0)) return null;
 
+    // Step: flying and jumping tokens are lifted and placed instead, but still count their hops so they can keep pace
+    // with the hopping tokens of their group
     let style = setting("movement-style");
     let hops = null;
+    let aerial = false;
     if (style === STYLE.STEP) {
-        if (segments.every(({ to }) => !AERIAL_ACTIONS.has(to.action))) hops = countHops(document, segments);
-        else style = STYLE.LIFT;
+        aerial = segments.some(({ to }) => AERIAL_ACTIONS.has(to.action));
+        hops = countHops(document, segments, aerial);
+        if (aerial) style = STYLE.LIFT;
     }
-    return { segments, total, length, style, hops, slowdown: null, profile: null, step: null };
+    return { segments, total, length, style, hops, aerial, slowdown: null, profile: null, step: null, beat: null };
 }
 
 /**
@@ -598,19 +640,33 @@ function groupTiming(token, options) {
     }
     applyGroupSpeed(analyses);
 
-    // Step: one hop timing for all hopping tokens. If the slowest can't hop, they are all lifted and placed instead
+    // Step: one hop timing for all hopping tokens. If the slowest can't hop, they are all lifted and placed instead.
+    // Flying tokens moved with them count too, so the beat fits the maximum duration for the whole group
     const steppers = [...analyses.values()].filter(a => a.style === STYLE.STEP);
+    const flyers = [...analyses.values()].filter(a => a.aerial);
+    let step = null;
     if (steppers.length) {
-        const step = createStepTiming(Math.max(...steppers.map(a => a.hops.hops)),
-            Math.max(...steppers.map(a => a.hops.slowHops)));
+        const paced = [...steppers, ...flyers];
+        step = createStepTiming(Math.max(...paced.map(a => a.hops.hops)), Math.max(...paced.map(a => a.hops.slowHops)));
         for (const analysis of steppers) {
             if (step) analysis.step = step;
             else analysis.style = STYLE.LIFT;
         }
     }
 
+    // Flying tokens moved with hopping ones keep their pace: each takes as long as hopping its path would, so they
+    // arrive together over the same distance, and bob to the hops' beat
+    if (step) {
+        for (const analysis of flyers) {
+            const unscaled = createProfile(analysis.total, analysis.length).total;
+            const duration = stepDuration(analysis.hops, step, analysis.slowdown);
+            analysis.profile = createProfile(analysis.total, analysis.length, duration / unscaled);
+            analysis.beat = step.hopTime * (analysis.slowdown ?? 1);
+        }
+    }
+
     // Glide and Lift & Place: one time scale for all profiles
-    const gliders = [...analyses.values()].filter(a => a.style !== STYLE.STEP);
+    const gliders = [...analyses.values()].filter(a => (a.style !== STYLE.STEP) && !a.profile);
     if (gliders.length) {
         const longest = Math.max(...gliders.map(a => createProfile(a.total, a.length).total));
         const maxDuration = setting("max-duration") * 1000;
@@ -629,7 +685,7 @@ function groupTiming(token, options) {
 function createPlan(token, movement, options, userId) {
     const analysis = groupTiming(token, options).get(token.document.id);
     if (!analysis) return null;
-    const { style, profile, step, total, segments, slowdown } = analysis;
+    const { style, profile, step, total, segments, slowdown, beat } = analysis;
 
     // The dragging user saw the preview lifted, so the token starts lifted on their screen
     const startLifted = (style !== STYLE.GLIDE) && (movement.method === "dragging") && (userId === game.user.id)
@@ -644,6 +700,7 @@ function createPlan(token, movement, options, userId) {
         startLifted,
         step,
         slowdown,
+        beat,
         anchors: segments.map(({ to }) => to),
         anchorIndex: 0
     };
@@ -852,7 +909,8 @@ function animateGlide(token, wrapped, plan, to, options, weight) {
     if (plan.style === STYLE.GLIDE) return wrapped(to, { ...options, duration, easing });
     const ontick = (elapsedMS, animation) => {
         const time = startTime + Math.min(animation.time, duration);
-        setLift(token, placeLift(time, profile.duration, startLifted));
+        const lift = placeLift(time, profile.duration, startLifted);
+        setLift(token, plan.beat && (lift > 0) ? lift * flightBob(time / plan.beat) : lift);
     };
     return wrapped(to, { ...options, duration, easing, ontick });
 }

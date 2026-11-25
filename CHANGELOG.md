@@ -1,5 +1,9 @@
 # Changelog
 
+## 14.6.0
+
+- **Flying tokens keep up with the group:** with Step, a flying or jumping token dragged together with walking tokens no longer races ahead and lands while the others are still hopping. It now takes as long as hopping its path would, so the group arrives together, and it bobs gently in the air to the same beat as the others' hops.
+
 ## 14.5.0
 
 - The module is now available in French, reviewed by Kameleau. Thank you!

@@ -84,7 +84,10 @@ Also for groups:
   whole group alike. If the group's longest move is too long to hop, the whole group uses Lift & Place.
 - The **Maximum Move Duration** applies to the group: the token with the longest move takes at most that long, and
   the others are sped up by the same amount, so their speeds stay in proportion.
-- Flying and jumping tokens in a Step group still use Lift & Place, timed together with any other lifted tokens.
+- Flying and jumping tokens in a Step group use Lift & Place, but keep pace with the hopping tokens: each takes as long
+  as hopping its own path would, so over the same distance they arrive together. While in the air they dip slightly
+  each time the others touch down, in the same rhythm. Their paths count toward the group's beat too, and if the
+  longest of them is too long to hop, the whole group uses Lift & Place.
 
 ### Drag preview
 
